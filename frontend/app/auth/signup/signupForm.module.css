@@ -1,0 +1,593 @@
+.formCard {
+  background: linear-gradient(
+    135deg,
+    var(--glass-light) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3rem;
+  width: 100%;
+  margin: 0rem auto;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden auto;
+  animation: signupForm_cardEntry__a5wvw 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 100%;
+}
+
+.fieldGroup {
+  margin-bottom: 1.5rem;
+  position: relative;
+  animation: fieldSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.fieldGroup:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.fieldGroup:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.fieldGroup:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.fieldGroup:nth-child(4) {
+  animation-delay: 0.25s;
+}
+.fieldGroup:nth-child(5) {
+  animation-delay: 0.3s;
+}
+.fieldGroup:nth-child(6) {
+  animation-delay: 0.35s;
+}
+.fieldGroup:nth-child(7) {
+  animation-delay: 0.4s;
+}
+.fieldGroup:nth-child(8) {
+  animation-delay: 0.45s;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.025em;
+  transition: color 0.2s ease;
+}
+
+.requiredAsterisk {
+  color: var(--error);
+  margin-left: 2px;
+  font-weight: 700;
+}
+
+.verifiedBadge {
+  color: var(--success);
+  margin-left: 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: verifiedPulse 2s ease-in-out infinite;
+}
+
+.inputField {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.inputField::placeholder {
+  color: var(--text-muted);
+  transition: opacity 0.2s ease;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1), 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.inputField:focus::placeholder {
+  opacity: 0.5;
+}
+
+.inputField:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.otpInput {
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+  letter-spacing: 0.5rem;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.button {
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary) 0%,
+    var(--accent-secondary) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.button:hover::before {
+  left: 100%;
+}
+
+.button:active {
+  transform: translateY(0);
+  transition: transform 0.1s ease;
+}
+
+.button:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.button:disabled::before {
+  display: none;
+}
+
+.buttonSecondary {
+  background: transparent;
+  color: var(--accent-primary);
+  border: 2px solid var(--accent-primary);
+  box-shadow: none;
+}
+
+.buttonSecondary:hover {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+}
+
+.buttonSecondary:disabled {
+  border-color: var(--bg-tertiary);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary) 0%,
+    var(--accent-secondary) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.submitButton::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    transparent 70%
+  );
+  transition: all 0.4s ease;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.submitButton:hover::after {
+  width: 300px;
+  height: 300px;
+}
+
+.errorMessage {
+  color: var(--error);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: errorSlideIn 0.3s ease;
+}
+
+.successMessage {
+  color: var(--success);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: successSlideIn 0.3s ease;
+}
+
+.warningMessage {
+  color: var(--warning);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: warningSlideIn 0.3s ease;
+}
+
+.generalMessage {
+  padding: 1rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+  font-weight: 500;
+  text-align: center;
+  animation: messageSlideIn 0.4s ease;
+}
+
+.generalMessageSuccess {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+
+.generalMessageError {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--error);
+}
+
+.hiddenField {
+  display: none;
+}
+
+.otpSection {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-top: 0.5rem;
+}
+
+.otpButtonGroup {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+}
+
+/* Input Focus Ring Enhancement */
+.inputField:focus {
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1), 0 0 20px rgba(79, 70, 229, 0.1),
+    0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating Label Effect */
+.fieldGroup {
+  position: relative;
+}
+
+.inputField:focus + .label,
+.inputField:not(:placeholder-shown) + .label {
+  transform: translateY(-0.5rem) scale(0.875);
+  color: var(--accent-primary);
+}
+
+/* Glow Effects */
+.button:focus,
+.inputField:focus {
+  position: relative;
+}
+
+.button:focus::after,
+.inputField:focus::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: inherit;
+  background: linear-gradient(
+    45deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(8px);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .formCard {
+    padding: 2rem 1.5rem;
+  }
+
+  .otpSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .otpButtonGroup {
+    flex-direction: column;
+  }
+}
+
+/* Advanced Micro-interactions */
+.inputField:hover {
+  border-color: rgba(79, 70, 229, 0.3);
+  transform: translateY(-0.5px);
+}
+
+.fieldGroup:hover .label {
+  color: var(--accent-primary);
+}
+
+/* Pulse Animation for Required Fields */
+.requiredAsterisk {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced Button States */
+.button:not(:disabled):hover {
+  box-shadow: 0 12px 35px rgba(79, 70, 229, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 0 30px rgba(79, 70, 229, 0.2);
+}
+
+/* Form Validation Visual Feedback */
+.inputField:invalid:not(:focus):not(:placeholder-shown) {
+  border-color: var(--error);
+  animation: shake 0.5s ease-in-out;
+}
+
+.inputField:valid:not(:focus):not(:placeholder-shown) {
+  border-color: var(--success);
+}
+
+/* Keyframe Animations */
+@keyframes cardEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fieldSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateX(-100%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes errorSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes successSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes warningSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes verifiedPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes glow {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Enhanced Focus States */
+.inputField:focus {
+  animation: focusGlow 0.3s ease;
+}
+
+@keyframes focusGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  }
+}
+
+/* Button Loading State */
+.button:disabled .loadingSpinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth Hover Transitions */
+.fieldGroup:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+/* Enhanced Card Shadow on Hover */
+.formCard:hover {
+  box-shadow: var(--shadow-lg), 0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Success State Glow */
+.inputField:valid:not(:placeholder-shown) {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* Error State Glow */
+.inputField:invalid:not(:focus):not(:placeholder-shown) {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}

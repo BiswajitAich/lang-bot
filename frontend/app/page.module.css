@@ -1,0 +1,68 @@
+.main {
+  min-height: 100vh;
+  background: var(--glass-dark);
+  padding: 0 1rem;
+}
+.container {
+  text-align: center;
+  background: black;
+  border-radius: 24px;
+  overflow: hidden;
+  min-height: 80dvh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bg-tertiary);
+  justify-content: center;
+  align-content: space-around;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.card {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  max-height: 80dvh;
+  align-items: center;
+}
+.message {
+  font-size: clamp(2rem, 4vw, 3rem);
+  text-transform: uppercase;
+  font-weight: bolder;
+  color: var(--accent-primary);
+  text-shadow: 0 2px 4px var(--accent-glow);
+  text-align: center;
+  place-content: center;
+  max-width: 80dvw;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.imageContainer {
+  width: max(70dvw, 300px);
+  aspect-ratio: 3/4;
+  position: relative;
+  max-width: 600px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.imageContainer img {
+  object-fit: contain;
+}
+.redirect {
+  padding: 1rem;
+  width: fit-content;
+  background: var(--selection-bg);
+  border-radius: 12px;
+  font-size: larger;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: black;
+}
+@media (max-width: 768px) {
+  .main {
+    padding: 0;
+  }
+  .card {
+    flex-direction: column;
+    max-height: fit-content;
+  }
+}

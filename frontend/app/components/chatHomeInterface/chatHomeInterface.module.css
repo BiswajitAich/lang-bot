@@ -1,0 +1,662 @@
+.display {
+  background: linear-gradient(
+    135deg,
+    var(--glass-light) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  margin: 2rem auto;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: chatCardEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.display::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-primary) 0%,
+    var(--accent-secondary) 50%,
+    var(--accent-primary) 100%
+  );
+  animation: progressShimmer 3s ease-in-out infinite;
+}
+
+.display::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  opacity: 0.03;
+  pointer-events: none;
+  animation: backgroundRotate 20s linear infinite;
+}
+
+.chatForm {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  position: relative;
+  z-index: 1;
+  animation: formSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+}
+
+.messageInput {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.messageInput::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+  transition: all 0.3s ease;
+}
+
+.messageInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15),
+    0 0 30px rgba(129, 140, 248, 0.1), 0 12px 35px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  animation: inputFocusGlow 0.4s ease;
+}
+
+.messageInput:focus::placeholder {
+  opacity: 0.6;
+  transform: translateX(8px);
+}
+
+.messageInput:hover:not(:focus) {
+  border-color: rgba(129, 140, 248, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.startButton {
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary) 0%,
+    var(--accent-secondary) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 1rem 2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  box-shadow: 0 8px 25px rgba(129, 140, 248, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  min-width: 140px;
+}
+
+.startButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.startButton::after {
+  content: "💬";
+  position: absolute;
+  right: 1rem;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+}
+
+.startButton:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 16px 45px rgba(129, 140, 248, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 0 40px rgba(129, 140, 248, 0.2);
+  padding-right: 3rem;
+}
+
+.startButton:hover::before {
+  left: 100%;
+}
+
+.startButton:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.startButton:active {
+  transform: translateY(-1px) scale(1);
+  transition: transform 0.1s ease;
+}
+
+.startButton:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  opacity: 0.6;
+}
+
+.startButton:disabled::before,
+.startButton:disabled::after {
+  display: none;
+}
+
+/* Chat Bubble Animation */
+.chatBubbles {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 60px;
+  height: 60px;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.chatBubble {
+  position: absolute;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  animation: bubbleFloat 4s ease-in-out infinite;
+}
+
+.chatBubble:nth-child(1) {
+  width: 12px;
+  height: 12px;
+  top: 0;
+  left: 0;
+  animation-delay: 0s;
+}
+
+.chatBubble:nth-child(2) {
+  width: 8px;
+  height: 8px;
+  top: 15px;
+  left: 20px;
+  animation-delay: 0.5s;
+}
+
+.chatBubble:nth-child(3) {
+  width: 6px;
+  height: 6px;
+  top: 30px;
+  left: 10px;
+  animation-delay: 1s;
+}
+
+/* Typing Indicator Style */
+.typingIndicator {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.startButton:hover .typingIndicator {
+  opacity: 1;
+}
+
+.typingDot {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typingDot:nth-child(1) {
+  animation-delay: 0s;
+}
+.typingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Enhanced Focus States */
+.messageInput:focus {
+  animation: inputPulse 0.6s ease;
+}
+
+/* Floating Particles Effect */
+.display:hover::before {
+  animation: particleShimmer 2s ease-in-out infinite;
+}
+
+/* Message Character Counter */
+.characterCounter {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.messageInput:focus + .characterCounter {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .display {
+    margin: 1rem;
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .chatForm {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .startButton {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .startButton:hover {
+    padding-right: 1rem;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .messageInput {
+    font-size: 0.875rem;
+    padding: 0.875rem 1.25rem;
+  }
+
+  .startButton {
+    font-size: 0.875rem;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes chatCardEntry {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes formSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progressShimmer {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateX(-100%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes backgroundRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes inputFocusGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(129, 140, 248, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15),
+      0 0 30px rgba(129, 140, 248, 0.1);
+  }
+}
+
+@keyframes inputPulse {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes bubbleFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.1;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes typingBounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes particleShimmer {
+  0%,
+  100% {
+    background-position: -200% 0;
+  }
+  50% {
+    background-position: 200% 0;
+  }
+}
+
+/* Advanced Hover Effects */
+.display:hover {
+  box-shadow: var(--shadow-lg), 0 25px 50px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chatForm:hover .messageInput {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Message Input Enhancement */
+.messageInput:not(:placeholder-shown) {
+  background: var(--bg-primary);
+  border-color: rgba(129, 140, 248, 0.2);
+}
+
+/* Send Button Icon Animation */
+.startButton:hover {
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary-hover) 0%,
+    var(--accent-secondary-hover) 100%
+  );
+}
+
+/* Focus Ring for Accessibility */
+.messageInput:focus-visible,
+.startButton:focus-visible {
+  outline: 2px solid var(--accent-secondary);
+  outline-offset: 2px;
+}
+
+/* Loading State Enhancement */
+.startButton:disabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.startButton:disabled::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: loadingWave 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingWave {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Enhanced Interactive States */
+.messageInput:hover:not(:focus) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(129, 140, 248, 0.25);
+}
+
+/* Conversation Starter Suggestions */
+.suggestionHint {
+  position: absolute;
+  top: -0.5rem;
+  left: 1.5rem;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+}
+
+.messageInput:focus + .suggestionHint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Glow Effect on Active State */
+.chatForm:focus-within {
+  animation: formGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes formGlow {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.05);
+  }
+}
+
+/* Button Ripple Effect */
+.startButton {
+  position: relative;
+  overflow: hidden;
+}
+
+.startButton:active::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+  }
+}
+
+/* Message Length Validation */
+.messageInput:invalid:not(:placeholder-shown) {
+  border-color: var(--warning);
+  animation: inputShake 0.4s ease;
+}
+
+@keyframes inputShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* Success State */
+.messageInput:valid:not(:placeholder-shown) {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.15);
+}
+
+/* Enhanced Button States */
+.startButton:not(:disabled):hover {
+  box-shadow: 0 16px 45px rgba(129, 140, 248, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 0 40px rgba(129, 140, 248, 0.2);
+}
+
+/* Chat Icon Floating Animation */
+.chatIcon {
+  display: inline-block;
+  margin-left: 0.5rem;
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Message Placeholder Animation */
+.messageInput:focus {
+  animation: placeholderPulse 2s ease-in-out infinite;
+}
+
+@keyframes placeholderPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15),
+      0 0 30px rgba(129, 140, 248, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.1),
+      0 0 35px rgba(129, 140, 248, 0.15);
+  }
+}
+
+/* Mobile-First Responsive Adjustments */
+@media (max-width: 768px) {
+  .display {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .chatForm {
+    gap: 0.75rem;
+  }
+
+  .messageInput {
+    font-size: 0.875rem;
+    padding: 0.875rem 1.25rem;
+  }
+
+  .startButton {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.875rem;
+    min-width: 120px;
+  }
+}
+
+/* Ultra-wide Screen Optimization */
+@media (min-width: 1200px) {
+  .display {
+    max-width: 700px;
+  }
+
+  .messageInput {
+    font-size: 1.1rem;
+    padding: 1.25rem 2rem;
+  }
+
+  .startButton {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.1rem;
+  }
+}

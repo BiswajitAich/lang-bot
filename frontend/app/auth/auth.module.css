@@ -1,0 +1,94 @@
+.authmain {
+  max-width: 100dvw;
+  height: 100dvh;
+  position: relative;
+}
+.authchange {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+.authchange:hover strong {
+  text-decoration-line: underline;
+}
+.heading {
+  width: 100%;
+  text-align: center;
+  padding: 0.4rem 0;
+  text-transform: uppercase;
+  text-shadow: 0 4px 8px var(--accent-primary);
+}
+.cardContainer {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 786px);
+  perspective: 398px;
+  background: linear-gradient(45deg, black, transparent);
+  height: 90dvh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: all 0.3s ease;
+  animation: shake 0.3s ease 1 forwards;
+  overflow: hidden;
+}
+
+.boxes {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background: linear-gradient(0deg, var(--accent-secondary-glow), transparent);
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.box {
+  flex: 1 1;
+  min-width: clamp(4rem, 0.5vw, 0.7rem);
+  min-height: 50px;
+  background: var(--bg-primary);
+  opacity: 1;
+  border-radius: 2px;
+}
+
+.boxAnimate {
+  animation: rise 3s ease-in-out infinite;
+}
+
+@keyframes rise {
+  0%,
+  100% {
+    transform: scale(0.3);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-50%) rotateY(20deg);
+  }
+  50% {
+    transform: translateX(-50%) rotateY(0deg);
+  }
+  75% {
+    transform: translateX(-50%) rotateY(-20deg);
+  }
+  100% {
+    transform: translateX(-50%) rotateY(0deg);
+  }
+}
