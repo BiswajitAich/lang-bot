@@ -56,7 +56,7 @@ export async function signupAction(
   const lastname = formData.get("lastname")?.toString().trim();
   const username = formData.get("username")?.toString().trim();
   const email = formData.get("email")?.toString().trim().toLowerCase();
-  const password = formData.get("password")?.toString();
+  const password = formData.get("password")?.toString().trim();
   const passwordConfirmation = formData
     .get("password-confirmation")
     ?.toString();

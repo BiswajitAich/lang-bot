@@ -77,7 +77,7 @@ def create_user(
                     (username, email, hashed_pw, first_name, last_name),
                 )
                 created_user = cur.fetchone()
-                # conn.commit()
+            conn.commit()
 
         return created_user is not None
     except psycopg.errors.UniqueViolation:
