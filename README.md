@@ -49,7 +49,8 @@ This project is designed to deliver a **production-grade chatbot application** w
 graph LR
     A[User] --> B[Next.js Frontend]
     B --> C[API Routes / Backend Logic]
-    C --> D[(PostgreSQL Database)]
+    C --> D[GROQ API]
+    C --> E[(PostgreSQL Database)]
 ```
 
 ---
