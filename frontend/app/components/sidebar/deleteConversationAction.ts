@@ -19,7 +19,7 @@ export async function deleteConversationAction(thread_id: string) {
       });
     }
     console.log("thread_id --> /llm/delete-conversation", thread_id);
-    
+
     const response = await fetch(`${API}/llm/delete-conversation`, {
       method: "POST",
       body: JSON.stringify({ thread_id: thread_id }),

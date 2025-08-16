@@ -57,8 +57,8 @@ const LoginForm = () => {
         <input
           name="username"
           type="text"
-          min={3}
-          max={20}
+          minLength={3}
+          maxLength={20}
           placeholder="Enter Username..."
           defaultValue={state.username}
           className={styles.inputField}

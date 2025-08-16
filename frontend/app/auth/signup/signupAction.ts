@@ -66,6 +66,7 @@ export async function signupAction(
   returnState.email = email!;
   returnState.password = password!;
   returnState.passwordConfirmation = passwordConfirmation!;
+  returnState.errors.emailOtpVerified = prevState?.errors?.emailOtpVerified || false;
   let hasErrors = false;
 
   // Validate username
@@ -76,10 +77,8 @@ export async function signupAction(
     returnState.errors.username =
       "Username must be 3-20 characters long and contain only letters, numbers, and underscores";
     hasErrors = true;
-  } else {
-    hasErrors = false;
   }
-
+  console.log("hasErrors username:", hasErrors);
   // Validate email
   if (!email) {
     returnState.errors.email = "Email is required";
@@ -88,18 +87,16 @@ export async function signupAction(
     returnState.errors.email =
       "Please enter a valid Gmail address (example@gmail.com)";
     hasErrors = true;
-  } else {
-    hasErrors = false;
   }
+  console.log("hasErrors email:", hasErrors);
 
   // Validate email OTP - only if email verification is required
-  if (!prevState?.errors?.emailOtpVerified) {
+  if (prevState?.errors?.emailOtpVerified) {
     returnState.errors.emailOtp =
       "Email must be verified before account creation";
     hasErrors = true;
-  } else {
-    hasErrors = false;
   }
+  console.log("hasErrors emailOtpVerified:", hasErrors);
 
   // Validate password
   if (!password) {
@@ -109,9 +106,8 @@ export async function signupAction(
     returnState.errors.password =
       "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number";
     hasErrors = true;
-  } else {
-    hasErrors = false;
   }
+  console.log("hasErrors password:", hasErrors);
 
   // Validate password confirmation
   if (!passwordConfirmation) {
@@ -121,9 +117,8 @@ export async function signupAction(
   } else if (password !== passwordConfirmation) {
     returnState.errors.passwordConfirmation = "Passwords do not match";
     hasErrors = true;
-  } else {
-    hasErrors = false;
   }
+  console.log("hasErrors:", hasErrors);
 
   if (hasErrors) {
     return returnState;

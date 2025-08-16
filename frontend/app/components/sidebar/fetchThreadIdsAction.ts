@@ -30,15 +30,16 @@ export async function fetchThreadIdsAction(row_index: number) {
       method: "POST",
       body: JSON.stringify({ user_id: session.id, row_index: row_index }),
       headers: { "Content-Type": "application/json" },
-      next: {
-        revalidate: 30,
-      },
+      // next: {
+      //   revalidate: 30,
+      // },
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return (await response.json()).thread_ids;
+    const data = await response.json();
+    return data.thread_ids;
   } catch (error) {
     console.error("Chat API (get thread ids) Error:", error);
     throw error;

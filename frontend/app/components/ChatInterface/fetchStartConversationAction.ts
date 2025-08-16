@@ -10,15 +10,14 @@ export async function fetchStartConversationAction(thread_id: string) {
     const session = verifySession(token);
 
     if (!session) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          "Set-Cookie": "auth_token=; Path=/; HttpOnly; Max-Age=0",
-        },
+      cookieStore.set("auth_token", "", {
+        path: "/",
+        maxAge: 0,
+        httpOnly: true,
       });
+      return { error: "Unauthorized" };
     }
-    
+
     const response = await fetch(`${API}/llm/get-conversation`, {
       method: "POST",
       body: JSON.stringify({ thread_id: thread_id }),

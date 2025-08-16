@@ -19,7 +19,8 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
-  const isNewChat = searchParams.get("new_chat") === "true";
+  const isNewChat = searchParams.get("n") === "true";
+  const parent_id = searchParams.get("p") || null;
   const isReturning = searchParams.get("returning") === "true";
   const router = useRouter();
   const [called, setCalled] = useState<boolean>(false);
@@ -27,10 +28,14 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
   const fetchLLMConversation = async (user_input: string) => {
     setInputValue("");
     setIsTyping(true);
-    console.log("/api/initial_llm_response", {
-      user_input: user_input,
-      thread_id: thread_id,
-    });
+    console.log(
+      "---------------------------------------------/api/initial_llm_response",
+      {
+        user_input: user_input,
+        thread_id: thread_id,
+        parent_id: parent_id,
+      }
+    );
 
     const res = await fetch("/api/initial_llm_response", {
       method: "POST",
@@ -38,6 +43,7 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
       body: JSON.stringify({
         user_input: user_input,
         thread_id: thread_id,
+        parent_id: parent_id,
       }),
       signal: controller.signal,
     });
@@ -72,9 +78,8 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
     setIsTyping(false);
   };
 
-  const fetchConversation = async (): Promise<string> => {
+  const fetchStartConversation = async (): Promise<string> => {
     const conversations = await fetchStartConversationAction(thread_id);
-
     if (!Array.isArray(conversations) || conversations.length === 0) {
       console.warn("No conversation found for thread:", thread_id);
       return "";
@@ -93,7 +98,7 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
   useEffect(() => {
     if (isNewChat && !called) {
       setCalled(true);
-      fetchConversation().then((startMessage: string) => {
+      fetchStartConversation().then((startMessage: string) => {
         if (startMessage.trim() !== "") {
           router.replace(`/chat/${thread_id}`);
           controller = new AbortController();
@@ -121,7 +126,7 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
           isReturning,
           0
         );
-        console.log(conversations);
+        console.log("💬🗨️",conversations);
 
         setMessages(conversations);
 

@@ -4,7 +4,7 @@ import { verifySession } from "@/app/lib/session";
 import { cookies } from "next/headers";
 
 export const chatConversationHistoryAction = async (
-  threadId: string,
+  thread_id: string,
   isReturning: boolean,
   last_index: number
 ) => {
@@ -14,18 +14,22 @@ export const chatConversationHistoryAction = async (
     const token = cookieStore.get("auth_token")?.value;
     const session = verifySession(token);
 
+    console.log("----------------chatConversationHistoryAction:", {
+      thread_id: thread_id,
+      last_index: last_index,
+    });
+
     if (!session) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          "Set-Cookie": "auth_token=; Path=/; HttpOnly; Max-Age=0",
-        },
+      cookieStore.set("auth_token", "", {
+        path: "/",
+        maxAge: 0,
+        httpOnly: true,
       });
+      return { error: "Unauthorized" };
     }
     const fetchOptions: RequestInit = {
       method: "POST",
-      body: JSON.stringify({ thread_id: threadId, last_index }),
+      body: JSON.stringify({ thread_id: thread_id, last_index: last_index }),
       headers: { "Content-Type": "application/json" },
     };
 

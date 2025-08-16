@@ -2,21 +2,20 @@
 import { verifySession } from "@/app/lib/session";
 import { cookies } from "next/headers";
 
-export const chatHomeInterfaceAction = async (data: FormData) => {
+export const chatHomeInterfaceAction = async (formData: FormData) => {
   try {
-    const init_msg = data.get("init_msg");
+    const init_msg = formData.get("init_msg");
     const cookieStore = await cookies();
     const token = cookieStore.get("auth_token")?.value;
     const session = verifySession(token);
 
     if (!session) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          "Set-Cookie": "auth_token=; Path=/; HttpOnly; Max-Age=0",
-        },
+      cookieStore.set("auth_token", "", {
+        path: "/",
+        maxAge: 0,
+        httpOnly: true,
       });
+      return { error: "Unauthorized", thread_id: null, parent_id: null };
     }
 
     console.log("Session from verifySession:", session);
@@ -33,7 +32,13 @@ export const chatHomeInterfaceAction = async (data: FormData) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return (await response.json()).thread_id;
+    const data = await response.json();
+    console.log("😁", data);
+
+    return {
+      thread_id: data.thread_id,
+      parent_id: data.parent_id,
+    };
   } catch (error) {
     console.error("Chat API (get Conversation) Error:", error);
     throw error;

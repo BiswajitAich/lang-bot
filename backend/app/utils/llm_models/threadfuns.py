@@ -1,12 +1,13 @@
-from app.db.database import get_db_connection
+from app.db.connection import get_pool
 
 
-def get_thread_ids(user_id: int, row_index: int = 0):
+async def get_thread_ids(user_id: int, row_index: int = 0):
     print('/get_thread_ids', {'user_id': user_id, 'row_index': row_index})
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
+        pool = get_pool()
+        async with pool.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
                     """
                         SELECT thread_id FROM threads 
                         WHERE user_id=%s ORDER BY thread_id 
@@ -14,9 +15,9 @@ def get_thread_ids(user_id: int, row_index: int = 0):
                     """,
                     (user_id, row_index),
                 )
-                rows = cur.fetchall()
-                print(f'Rows fetched: {rows}')
-                thread_ids = [str(row[0]) for row in rows]
+                rows = await cur.fetchall()
+            print(f'Rows fetched: {rows}')
+            thread_ids = [str(row[0]) for row in rows]
         print('Returning thread_ids:', thread_ids)
         return thread_ids
     except Exception as e:
