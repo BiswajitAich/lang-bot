@@ -1,6 +1,6 @@
 "use server";
 
-import { verifySession } from "@/app/lib/session";
+import { verifySession } from "@/app/_lib/session";
 import { cookies } from "next/headers";
 export async function fetchStartConversationAction(thread_id: string) {
   try {

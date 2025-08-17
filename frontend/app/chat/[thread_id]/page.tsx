@@ -1,5 +1,5 @@
 import styles from "../chatHome.module.css";
-import ChatInterface from "@/app/components/ChatInterface/ChatInterface";
+import ChatInterface from "@/app/_components/ChatInterface/ChatInterface";
 
 interface ThreadProps {
   params: Promise<{

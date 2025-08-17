@@ -1,4 +1,4 @@
-import { verifySession } from "@/app/lib/session";
+import { verifySession } from "@/app/_lib/session";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {

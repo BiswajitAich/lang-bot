@@ -1,5 +1,5 @@
 "use server";
-import { verifySession } from "@/app/lib/session";
+import { verifySession } from "@/app/_lib/session";
 import { cookies } from "next/headers";
 
 export const chatHomeInterfaceAction = async (formData: FormData) => {

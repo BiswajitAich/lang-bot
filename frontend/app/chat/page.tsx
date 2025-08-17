@@ -1,4 +1,4 @@
-import ChatHomeInterface from "../components/chatHomeInterface/ChatHomeInterface";
+import ChatHomeInterface from "../_components/chatHomeInterface/ChatHomeInterface";
 
 const ChatHome = () => {
   return (

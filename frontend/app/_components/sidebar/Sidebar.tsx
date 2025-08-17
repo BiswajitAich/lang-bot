@@ -1,36 +1,15 @@
 "use client";
-import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { memo, useState } from "react";
+import { usePathname } from "next/navigation";
 import styles from "./sidebar.module.css";
 import Link from "next/link";
-import { deleteConversationAction } from "./deleteConversationAction";
+import { useThreads } from "@/app/_lib/hooks";
 
-const Sidebar = ({ thread_ids }: { thread_ids: string[] }) => {
+const Sidebar = () => {
+  const { threadIds, deleteThread } = useThreads();
   const [displaySideBar, setDisplaySideBar] = useState<boolean>(false);
-  const [threadIds, setThreadIds] = useState<string[]>(thread_ids);
   const pathname = usePathname();
-  const router = useRouter();
   const currentThreadId = pathname.split("/").pop() as string | undefined;
-
-  async function handleThreadDelete(target_thread_id: string): Promise<void> {
-    if (!target_thread_id) return;
-    console.log("target_thread_id", target_thread_id);
-
-    const data = await deleteConversationAction(target_thread_id);
-    if (!data?.success) {
-      console.log(data);
-      return;
-    }
-    setThreadIds((prev) => {
-      return prev.filter((id) => id !== target_thread_id);
-    });
-    const checkCurrentThreadId = pathname.split("/").pop() as
-      | string
-      | undefined;
-    if (checkCurrentThreadId === target_thread_id) {
-      router.push("/chat");
-    }
-  }
 
   return (
     <aside
@@ -97,7 +76,7 @@ const Sidebar = ({ thread_ids }: { thread_ids: string[] }) => {
               </Link>
               <button
                 className={styles.delete}
-                onClick={() => handleThreadDelete(id)}
+                onClick={() => deleteThread(id, currentThreadId || "")}
                 aria-label={`Delete chat ${id}`}
               >
                 <svg
@@ -136,4 +115,4 @@ const Sidebar = ({ thread_ids }: { thread_ids: string[] }) => {
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

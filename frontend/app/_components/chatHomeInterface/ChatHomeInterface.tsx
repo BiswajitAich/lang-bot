@@ -1,13 +1,12 @@
 "use client";
-import { useRouter } from "next/navigation";
 import styles from "./chatHomeInterface.module.css";
-import { chatHomeInterfaceAction } from "./chatHomeInterfaceAction";
+import { useThreads } from "@/app/_lib/hooks";
+
 const ChatHomeInterface = () => {
-  const router = useRouter();
+  const { addNewThread } = useThreads();
   async function handleSubmit(data: FormData) {
     if (!data.get("init_msg")?.toString().trim()) return;
-    const result = await chatHomeInterfaceAction(data);
-    router.push(`/chat/${result.thread_id}?n=true&p=${result.parent_id}`);
+    addNewThread(data);
   }
   return (
     <div className={styles.display}>

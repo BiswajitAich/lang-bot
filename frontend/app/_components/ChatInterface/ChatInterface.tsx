@@ -128,6 +128,9 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
         );
         console.log("💬🗨️",conversations);
 
+        if(conversations.length<=0){
+          router.push("/chat")
+        }
         setMessages(conversations);
 
         if (isReturning) {
