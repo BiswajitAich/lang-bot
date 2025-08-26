@@ -38,11 +38,24 @@ async def initialize_database():
                         id SERIAL PRIMARY KEY,
                         thread_id UUID NOT NULL REFERENCES threads(thread_id) ON DELETE CASCADE,
                         parent_id INT REFERENCES messages(id),
-                        role TEXT CHECK (role IN ('user', 'assistant')),
+                        role TEXT CHECK (role IN ('user', 'assistant', 'tool')),
                         content TEXT NOT NULL,
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
                     );
                 """
+                )
+
+                await cur.execute(
+                    """
+                        CREATE TABLE IF NOT EXISTS tool_logs (
+                            id SERIAL PRIMARY KEY,
+                            message_id INT REFERENCES messages(id) ON DELETE CASCADE,
+                            tool_name TEXT NOT NULL,
+                            input TEXT NOT NULL,
+                            output TEXT,
+                            used_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                        );
+                    """
                 )
 
                 # await cur.execute(

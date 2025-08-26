@@ -1,11 +1,10 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo, useCallback } from "react";
 import styles from "./ChatInterface.module.css";
-import { chatConversationHistoryAction } from "./chatConversationHistoryAction";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchStartConversationAction } from "./fetchStartConversationAction";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Message {
   content: string;
@@ -13,7 +12,7 @@ interface Message {
 }
 
 export default function ChatInterface({ thread_id }: { thread_id: string }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const queryClient = useQueryClient();
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -21,21 +20,120 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
   const searchParams = useSearchParams();
   const isNewChat = searchParams.get("n") === "true";
   const parent_id = searchParams.get("p") || null;
-  const isReturning = searchParams.get("returning") === "true";
   const router = useRouter();
-  const [called, setCalled] = useState<boolean>(false);
-  let controller: AbortController;
+  const controllerRef = useRef<AbortController | null>(null);
+  const [cachedMessages, setCachedMessages] = useState<Message[]>([]);
+  const LOCAL_STORAGE_KEY = "chat_threads_cache";
+
+  function saveMessagesToCache(thread_id: string, messages: Message[]) {
+    if (typeof window === "undefined") return;
+    const existing = JSON.parse(
+      localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
+    );
+    existing[thread_id] = messages.slice(-10);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(existing));
+  }
+
+  function loadMessagesFromCache(thread_id: string): Message[] {
+    if (typeof window === "undefined") return [];
+    const existing = JSON.parse(
+      localStorage.getItem(LOCAL_STORAGE_KEY) || "{}"
+    );
+    return existing[thread_id] || [];
+  }
+
+  const fetchInitialQueryFn = useCallback(async (): Promise<{
+    messages: Message[];
+    redirect?: string;
+  }> => {
+    const cachedMessages = loadMessagesFromCache(thread_id);
+    if (cachedMessages.length > 0 && !isNewChat) {
+      return { messages: cachedMessages };
+    }
+
+    if (isNewChat) {
+      const msgs = await fetchStartConversation();
+      if (msgs.length === 1) {
+        fetchLLMConversation(msgs[0].content);
+        return { messages: msgs, redirect: `/chat/${thread_id}` };
+      }
+      return { messages: [], redirect: "/chat" };
+    }
+
+    controllerRef.current = new AbortController();
+
+    const res = await fetch("/api/get_conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ thread_id: thread_id, last_index: 0 }),
+      signal: controllerRef.current.signal,
+    });
+
+    let conversations;
+    try {
+      conversations = await res.json();
+    } catch (err) {
+      console.error("Failed to parse JSON:", err);
+      conversations = { messages: [] };
+    }
+
+    return { messages: conversations.messages ?? [] };
+  }, [thread_id, isNewChat]);
+
+  const { data } = useQuery({
+    queryKey: [thread_id],
+    initialData: { messages: cachedMessages },
+    queryFn: fetchInitialQueryFn,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (data?.messages?.length) {
+      saveMessagesToCache(thread_id, data.messages);
+    }
+  }, [data?.messages, thread_id]);
+  useEffect(() => {
+    const messages = loadMessagesFromCache(thread_id);
+    setCachedMessages(messages);
+  }, [thread_id]);
+  useEffect(() => {
+    if (data?.redirect) {
+      router.replace(data.redirect);
+    }
+  }, [data, router]);
+
+  const streamAssistantResponse = async (
+    reader: ReadableStreamDefaultReader<Uint8Array>
+  ) => {
+    const decoder = new TextDecoder();
+    queryClient.setQueryData<{ messages: Message[] }>([thread_id], (old) => ({
+      messages: [...(old?.messages ?? []), { role: "assistant", content: "" }],
+    }));
+
+    while (true) {
+      const { done, value } = await reader!.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+
+      queryClient.setQueryData<{ messages: Message[] }>([thread_id], (old) => {
+        if (!old) return { messages: [] };
+        const updated = [...old.messages];
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          content: updated[lastIndex].content + chunk,
+        };
+        return { messages: updated };
+      });
+    }
+  };
+
   const fetchLLMConversation = async (user_input: string) => {
     setInputValue("");
     setIsTyping(true);
-    console.log(
-      "---------------------------------------------/api/initial_llm_response",
-      {
-        user_input: user_input,
-        thread_id: thread_id,
-        parent_id: parent_id,
-      }
-    );
+    controllerRef.current = new AbortController();
 
     const res = await fetch("/api/initial_llm_response", {
       method: "POST",
@@ -45,70 +143,29 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
         thread_id: thread_id,
         parent_id: parent_id,
       }),
-      signal: controller.signal,
+      signal: controllerRef.current.signal,
     });
-
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder();
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: "",
-      },
-    ]);
-    while (true) {
-      const { done, value } = await reader!.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-
-      setMessages((prev) => {
-        const updated = [...prev];
-        const lastIndex = updated.length - 1;
-
-        updated[lastIndex] = {
-          ...updated[lastIndex],
-          content: updated[lastIndex].content + chunk,
-        };
-
-        return updated;
-      });
-    }
+    if (!res.body) return;
+    await streamAssistantResponse(res.body.getReader());
 
     setIsTyping(false);
   };
 
-  const fetchStartConversation = async (): Promise<string> => {
-    const conversations = await fetchStartConversationAction(thread_id);
-    if (!Array.isArray(conversations) || conversations.length === 0) {
-      console.warn("No conversation found for thread:", thread_id);
-      return "";
-    }
-
-    const firstMsg = conversations[0];
-    const newMessage: Message = {
-      content: firstMsg.content,
-      role: firstMsg.role,
-    };
-    setMessages((prev) => [...prev, newMessage]);
-
-    return newMessage.content;
-  };
-
   useEffect(() => {
-    if (isNewChat && !called) {
-      setCalled(true);
-      fetchStartConversation().then((startMessage: string) => {
-        if (startMessage.trim() !== "") {
-          router.replace(`/chat/${thread_id}`);
-          controller = new AbortController();
-          fetchLLMConversation(startMessage);
-        } else {
-          console.warn("Skipping LLM call: empty start message");
-        }
-      });
-    }
-  }, [isNewChat, thread_id, called]);
+    return () => controllerRef.current?.abort();
+  }, []);
+
+  const fetchStartConversation = async (): Promise<Message[]> => {
+    const res = await fetch("/api/fetch_start_conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ thread_id }),
+    });
+    const conversations = await res.json();
+    console.log("fetch_start_conversation", conversations);
+
+    return conversations.messages || [];
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -116,89 +173,42 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [data?.messages]);
 
-  useEffect(() => {
-    async function fetchConversation() {
-      try {
-        const conversations = await chatConversationHistoryAction(
-          thread_id,
-          isReturning,
-          0
-        );
-        console.log("💬🗨️",conversations);
+  const handleSendMessage = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-        if(conversations.length<=0){
-          router.push("/chat")
-        }
-        setMessages(conversations);
+      if (!inputValue.trim()) return;
 
-        if (isReturning) {
-          router.replace(`/chat/${thread_id}`);
-        }
-      } catch (error) {
-        console.log("Conversation fetch failed:", error);
-      }
-    }
+      const userMessage: Message = {
+        content: inputValue.trim(),
+        role: "user",
+      };
 
-    if (thread_id) {
-      fetchConversation();
-    }
-  }, [thread_id]);
+      queryClient.setQueryData<{ messages: Message[] }>([thread_id], (old) => ({
+        messages: [...(old?.messages ?? []), userMessage],
+      }));
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+      setInputValue("");
+      setIsTyping(true);
 
-    if (!inputValue.trim()) return;
-
-    const userMessage: Message = {
-      content: inputValue.trim(),
-      role: "user",
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-    setIsTyping(true);
-
-    const res = await fetch("/api/continue_llm_response", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_input: inputValue,
-        thread_id: thread_id,
-      }),
-    });
-
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder();
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        content: "",
-        role: "assistant",
-      },
-    ]);
-
-    while (true) {
-      const { done, value } = await reader!.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      setMessages((prev) => {
-        const updated = [...prev];
-        const lastIndex = updated.length - 1;
-
-        updated[lastIndex] = {
-          ...updated[lastIndex],
-          content: updated[lastIndex].content + chunk,
-        };
-
-        return updated;
+      const res = await fetch("/api/continue_llm_response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_input: inputValue,
+          thread_id: thread_id,
+        }),
       });
-    }
 
-    setIsTyping(false);
-  };
+      if (!res.body) return;
+      await streamAssistantResponse(res.body.getReader());
+
+      setIsTyping(false);
+    },
+    [inputValue, thread_id]
+  );
 
   return (
     <div className={styles.chatContainer}>
@@ -229,21 +239,7 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
       {/* Messages */}
       <div className={styles.messagesContainer}>
         <div className={styles.messagesList}>
-          {messages.map((message, idx) => (
-            <div
-              key={idx}
-              className={`${styles.messageWrapper} ${
-                message.role === "user" ? styles.userMessage : styles.botMessage
-              }`}
-            >
-              <div className={styles.messageContent}>
-                <Markdown remarkPlugins={[remarkGfm]}>
-                  {message.content}
-                </Markdown>
-              </div>
-            </div>
-          ))}
-
+          <DisplayMessages messages={data?.messages ?? []} />
           {isTyping && (
             <div className={`${styles.messageWrapper} ${styles.botMessage}`}>
               <div className={styles.messageContent}>
@@ -307,3 +303,22 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
     </div>
   );
 }
+
+const DisplayMessages = memo(({ messages }: { messages: Message[] }) => {
+  return (
+    <>
+      {messages.map((message, idx) => (
+        <div
+          key={idx}
+          className={`${styles.messageWrapper} ${
+            message.role === "user" ? styles.userMessage : styles.botMessage
+          }`}
+        >
+          <div className={styles.messageContent}>
+            <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+});

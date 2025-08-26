@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useThreads } from "@/app/_lib/hooks";
 
 const Sidebar = () => {
-  const { threadIds, deleteThread } = useThreads();
+  const { threadIds, deleteThread, pending } = useThreads();
   const [displaySideBar, setDisplaySideBar] = useState<boolean>(false);
   const pathname = usePathname();
   const currentThreadId = pathname.split("/").pop() as string | undefined;
@@ -68,9 +68,12 @@ const Sidebar = () => {
               }`}
             >
               <Link
-                href={`/chat/${id}?returning=true`}
+                href={`/chat/${id}`}
                 className={styles.chatLink}
                 style={{ maxWidth: "calc(100% - 40px)" }}
+                onClick={(e) => {
+                  if (pending) e.preventDefault();
+                }}
               >
                 <p className={styles.thread}>{id}</p>
               </Link>
@@ -78,6 +81,7 @@ const Sidebar = () => {
                 className={styles.delete}
                 onClick={() => deleteThread(id, currentThreadId || "")}
                 aria-label={`Delete chat ${id}`}
+                disabled={pending}
               >
                 <svg
                   width="16"

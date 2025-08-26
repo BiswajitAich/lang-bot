@@ -1,3 +1,4 @@
+import ReactQueryProvider from "@/app/_components/providers/ReactQueryProvider";
 import styles from "../chatHome.module.css";
 import ChatInterface from "@/app/_components/ChatInterface/ChatInterface";
 
@@ -7,10 +8,12 @@ interface ThreadProps {
   }>;
 }
 const Chatpage = async ({ params }: ThreadProps) => {
-  const { thread_id } = await params;
+  const thread_id = (await params).thread_id;
   return (
     <section className={styles.container}>
-      <ChatInterface thread_id={thread_id} />
+      <ReactQueryProvider>
+        <ChatInterface thread_id={thread_id} />
+      </ReactQueryProvider>
     </section>
   );
 };

@@ -240,4 +240,7 @@
   .messagesList {
     padding: 24px;
   }
+  .chatHeader {
+    padding-left: 62px;
+  }
 }
