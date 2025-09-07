@@ -104,6 +104,13 @@ DB_NAME=
 DB_USER=
 DB_PASSWORD=
 DB_PORT=
+
+# Extra to trace the backend flow ---
+LANGSMITH_TRACING="true" # or "false"
+LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
+LANGSMITH_API_KEY="lsv..................................c3"
+LANGSMITH_PROJECT="" # Any name
+
 ```
 
 You can checkout **backend** container in GHCR <small>[click here](https://github.com/users/BiswajitAich/packages/container/package/lang-bot-api)</small>
