@@ -1,16 +1,20 @@
-from typing import List, Optional, Tuple, TypedDict
+import asyncio
+from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
 from app.db.connection import get_pool
 
 
 class Message(TypedDict):
     role: str
     content: str
+    created_at: datetime
 
 
 async def create_thread_new(
     user_id: int, init_msg: str
 ) -> Tuple[str, int | None, bool]:
-    pool = get_pool()
+    pool = await get_pool()
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
@@ -37,32 +41,94 @@ async def create_thread_new(
             rowMsg = await cur.fetchone()
             print("😶‍🌫️", rowMsg)
             parent_id = int(rowMsg[0]) if rowMsg else None
+            await conn.commit()
         return thread_id, parent_id, True
 
 
 async def get_conversations_from_table(
-    thread_id: str, last_index: int = 0
-) -> List[Message]:
-    pool = get_pool()
-    async with pool.connection() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                        SELECT role, content, created_at
-                        FROM messages
-                        WHERE thread_id = %s
-                        ORDER BY created_at ASC
-                        LIMIT 10 OFFSET %s;
-                    """,
-                (thread_id, last_index),
+    thread_id: str, created_at: Optional[datetime] = None
+) -> Dict[str, Any]:
+    max_retries = 2
+    page_size = 4
+    limit = page_size + 1
+    for retry_count in range(max_retries):
+        try:
+            pool = await get_pool()
+            async with pool.connection() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(
+                        f"""
+                            SELECT id, role, content, created_at
+                            FROM messages
+                            WHERE thread_id = %s
+                            { 'AND created_at < %s' if created_at else '' }
+                            ORDER BY created_at DESC
+                            LIMIT {limit};
+                        """,
+                        (thread_id, created_at) if created_at else (thread_id,),
+                    )
+
+                    messages_data = await cur.fetchall()
+                    has_more = len(messages_data) > page_size
+                    messages_to_return = messages_data[:page_size]
+                    if not messages_to_return:
+                        return {"messages": [], "has_more": False}
+
+                    parent_ids = [row[0] for row in messages_to_return]
+
+                    # Fetch images for these messages
+                    await cur.execute(
+                        """
+                            SELECT parent_id, role, url_id, description, created_at
+                            FROM images
+                            WHERE thread_id = %s AND parent_id = ANY(%s);
+                        """,
+                        (thread_id, parent_ids),
+                    )
+                    images_data = await cur.fetchall()
+
+            # Group images by parent message
+            images_by_message = defaultdict(list)
+            for img in images_data[:4]:
+                images_by_message[img[0]].append(
+                    {
+                        "role": img[1],
+                        "url_id": img[2],
+                        "description": img[3],
+                        "created_at": img[4].isoformat() if img[4] else None,
+                    }
+                )
+
+            # Build result in chronological order (oldest first)
+            result = [
+                {
+                    "id": row[0],
+                    "role": row[1],
+                    "content": row[2],
+                    "created_at": row[3].isoformat() if row[3] else None,
+                    "images": images_by_message.get(row[0], []),
+                }
+                for row in reversed(
+                    messages_to_return
+                )  # Reverse to get chronological order
+            ]
+
+            # has_more is true if we got a full page
+            return {"messages": result, "has_more": has_more}
+
+        except Exception as e:
+            print(
+                f"Error fetching conversations (attempt {retry_count + 1}/{max_retries}): {e}"
             )
 
-            data = await cur.fetchall()
-    return [{"role": row[0], "content": row[1]} for row in data]
+            if retry_count + 1 == max_retries:
+                print(f"Failed to fetch conversations after {max_retries} attempts")
+                raise
+            await asyncio.sleep(0.5 * (retry_count + 1))
 
 
 async def delete_conversation(thread_id: str):
-    pool = get_pool()
+    pool = await get_pool()
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
@@ -82,7 +148,7 @@ async def delete_conversation(thread_id: str):
 
 
 async def insert_user_conversation(thread_id: str, message: str):
-    pool = get_pool()
+    pool = await get_pool()
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(

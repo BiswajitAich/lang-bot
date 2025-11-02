@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ReactQueryProvider from "./_lib/ReactQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,11 +19,8 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  authors: [
-    { name: "Biswajit Aich" }
-  ],
+  authors: [{ name: "Biswajit Aich" }],
 };
-
 
 export default function RootLayout({
   children,
@@ -32,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>
   );

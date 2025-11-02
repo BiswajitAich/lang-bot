@@ -4,7 +4,7 @@ from app.db.connection import get_pool
 async def initialize_database():
     """Initialize database tables"""
     try:
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
@@ -40,6 +40,20 @@ async def initialize_database():
                         parent_id INT REFERENCES messages(id),
                         role TEXT CHECK (role IN ('user', 'assistant', 'tool')),
                         content TEXT NOT NULL,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                    );
+                """
+                )
+                
+                await cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS images (
+                        id SERIAL PRIMARY KEY,
+                        thread_id UUID NOT NULL REFERENCES threads(thread_id) ON DELETE CASCADE,
+                        parent_id INT REFERENCES messages(id) ON DELETE CASCADE,
+                        url_id VARCHAR(50) NOT NULL UNIQUE,
+                        role TEXT CHECK (role IN ('user', 'assistant')),
+                        description TEXT,
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
                     );
                 """

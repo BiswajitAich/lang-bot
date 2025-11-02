@@ -4,7 +4,7 @@ from app.db.connection import get_pool
 async def get_thread_ids(user_id: int, row_index: int = 0):
     print('/get_thread_ids', {'user_id': user_id, 'row_index': row_index})
     try:
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(

@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 import io
-
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from psycopg_pool import AsyncConnectionPool
@@ -16,8 +15,12 @@ async def lifespan(app: FastAPI):
     async with AsyncConnectionPool(get_db_url()) as pool:
         set_pool(pool)
         print("connection.pool:", pool)
-        await initialize_database()
-        yield
+        try:
+            await initialize_database()
+            yield  
+        finally:
+            await pool.close()
+            print("🧹 Connection pool closed cleanly.")
 
 
 app = FastAPI(lifespan=lifespan)

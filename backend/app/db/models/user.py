@@ -18,7 +18,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 async def check_if_user_present(username: str) -> bool:
     try:
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
@@ -36,7 +36,7 @@ async def check_if_user_present(username: str) -> bool:
 
 async def check_if_email_present(email: str) -> bool:
     try:
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
@@ -65,7 +65,7 @@ async def create_user(
 ) -> bool:
     try:
         hashed_pw = hash_password(password)
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
@@ -86,7 +86,7 @@ async def create_user(
 
 async def check_user_credentials(username: str, email: str, password: str):
     try:
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
@@ -112,3 +112,27 @@ async def check_user_credentials(username: str, email: str, password: str):
                 return False, None
     except psycopg.errors.UniqueViolation:
         return False, None
+
+
+async def delete_user(id: int, user_name: str):
+    try:
+        pool = await get_pool()
+        async with pool.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    """
+                        DELETE FROM users 
+                        WHERE id = %s AND username = %s
+                        RETURNING id;
+                    """,
+                    (id, user_name),
+                )
+                deleted = await cur.fetchone()
+        return deleted is not None
+
+    except psycopg.OperationalError as e:
+        print(f"⚠️ Connection error: {e}")
+        return False
+    except psycopg.Error as e:
+        print(f"❌ Error deleting user: {e}")
+        return False

@@ -15,21 +15,27 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { thread_id, last_index } = await req.json();
-  console.log("🍀🍀🍀🍀🍀llm/get-conversation", { thread_id, last_index });
+  const { thread_id, created_at = null } = await req.json();
+  console.log("🍀🍀🍀🍀🍀llm/get-conversation", { thread_id, created_at });
+
+  const body: { thread_id: string; created_at?: string | null } = {
+    thread_id,
+    ...(created_at ? { created_at } : {}),
+  };
 
   const fastapiRes = await fetch(`${API}/llm/get-conversation`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ thread_id: thread_id, last_index: last_index }),
+
+    body: JSON.stringify(body),
   });
 
   const data = await fastapiRes.json();
-  console.log(data);
+  // console.log(data);
 
-  return new Response(JSON.stringify({ messages: data.conversations ?? [] }), {
+  return new Response(JSON.stringify({ data }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });

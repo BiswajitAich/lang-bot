@@ -7,8 +7,9 @@ from app.utils.tools import tools
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 
-llm = ChatGroq(
+llm_base = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0.5, 
     groq_api_key=groq_api_key
-    ).bind_tools(tools=tools)
+    )
+llm = llm_base.bind_tools(tools=tools, tool_choice="auto")

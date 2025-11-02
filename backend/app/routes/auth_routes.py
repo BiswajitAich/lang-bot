@@ -8,6 +8,7 @@ from app.db.models.user import (
     check_if_user_present,
     check_user_credentials,
     create_user,
+    delete_user,
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -45,6 +46,11 @@ class UserData(BaseModel):
 
 class ResponseWithUserData(Response):
     user: Optional[UserData] = None
+
+
+class DeleteUserData(BaseModel):
+    id: int
+    user_name: str
 
 
 # --------------------------------------------------------------------
@@ -111,6 +117,31 @@ async def create_new_user(req: CreateUser) -> Response:
         return Response(success=False, message="User Creation Unsuccessful.")
 
 
+@router.post("/delete-user")
+async def check_credentials(req: DeleteUserData) -> Response:
+    try:
+        success = await delete_user(req.id, req.user_name)
+    except DatabaseError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error occurred. {e}",
+        )
+    except:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to check-user-credentials.",
+        )
+    if success:
+        return ResponseWithUserData(
+            success=True, message="User account successfully deleted!"
+        )
+    else:
+        return ResponseWithUserData(
+            success=False, message="Unable to delete user account"
+        )
+
+
 @router.post("/check-user-credentials")
 async def check_credentials(req: CheckCredentials) -> ResponseWithUserData:
     try:
@@ -123,7 +154,7 @@ async def check_credentials(req: CheckCredentials) -> ResponseWithUserData:
             detail=f"Database error occurred. {e}",
         )
     except:
-        traceback.print_exc() 
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to check-user-credentials.",

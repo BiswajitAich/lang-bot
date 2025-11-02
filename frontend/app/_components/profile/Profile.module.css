@@ -1,0 +1,38 @@
+.userCard {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background-color: var(--bg-secondary);
+  padding: 0.5rem;
+  border-radius: 8px;
+  width: calc(100% - 8px);
+  border: 1px solid var(--glass-light);
+  animation: fadeIn 0.3s ease-in;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.userCard:hover {
+  background-color: var(--glass-light);
+  border: 1px solid var(--glass-dark);
+}
+.userCard_l {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.userCard:hover .userCard_l img {
+  transform: scale(1.1);
+  transition: transform ease-in-out 0.3ms;
+}
+.name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--accent-secondary-glow);
+}

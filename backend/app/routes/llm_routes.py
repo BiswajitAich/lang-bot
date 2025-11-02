@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import json
 import traceback
 from typing import List, Optional
@@ -42,7 +43,7 @@ class LLMRequestInitial(LLMRequest):
 
 class ConversationId(ThreadId):
     thread_id: str
-    last_index: Optional[int] = 0
+    created_at: Optional[datetime] = None
 
 
 class NewThread(BaseModel):
@@ -64,8 +65,23 @@ class ResponseThreadIds(Response):
     thread_ids: List[str]
 
 
-class ResponseConversation(Response):
-    conversations: List[Message]
+class MessageItem(BaseModel):
+    id: int
+    role: str
+    content: str
+    created_at: datetime
+    images: List[dict] = []
+
+
+class ConversationPage(BaseModel):
+    messages: List[MessageItem]
+    has_more: bool
+
+
+class ResponseConversation(BaseModel):
+    success: bool
+    conversations: ConversationPage
+    message: str
 
 
 # ------------------------------------------------------
@@ -76,7 +92,9 @@ def llm_initial_response(req: LLMRequestInitial):
     print("📄📄📄📄")
     return StreamingResponse(
         message_generator(
-            {"messages": {"role": "user", "content": req.user_input}},
+            {
+                "messages": {"role": "user", "content": req.user_input},
+            },
             req.thread_id,
             req.parent_id,
         ),
@@ -86,24 +104,40 @@ def llm_initial_response(req: LLMRequestInitial):
 
 @router.post("/continue-llm-response")
 async def continue_llm_response(req: LLMRequest):
-    conversationList = await get_conversations_from_table(req.thread_id)
-    conversationList.append({"role": "user", "content": req.user_input})
-    parent_id = await insert_user_conversation(
-        thread_id=req.thread_id, message=req.user_input
-    )
-    print(conversationList)
-    if not parent_id:
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get parent_id",
+    try:
+        conversationData = await get_conversations_from_table(req.thread_id)
+        conversationList = conversationData["messages"]
+
+        conversationList.append(
+            {
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "images": [],
+                "role": "user",
+                "content": req.user_input,
+            }
         )
-    return StreamingResponse(
-        message_generator(
-            {"messages": conversationList}, req.thread_id, parent_id=parent_id
-        ),
-        media_type="text/event-stream",
-    )
+        parent_id = await insert_user_conversation(
+            thread_id=req.thread_id, message=req.user_input
+        )
+        print("⚠️⚠️⚠️⚠️⚠️⚠️", {"messages": conversationList})
+        if not parent_id:
+            traceback.print_exc()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get parent_id",
+            )
+        return StreamingResponse(
+            message_generator(
+                {
+                    "messages": conversationList,
+                },
+                req.thread_id,
+                parent_id=parent_id,
+            ),
+            media_type="text/event-stream",
+        )
+    except Exception as e:
+        print(f"/continue-llm-response error: {e}")
 
 
 @router.post("/new-thread")
@@ -168,11 +202,12 @@ async def get_thread_ids_with_rowindex(req: GetThreadIds) -> ResponseThreadIds:
 
 
 @router.post("/get-conversation")
-async def get_conversations(req: ConversationId) -> ResponseConversation:
+async def get_conversations(req: ConversationId) -> dict:
     try:
-        conversations = await get_conversations_from_table(
-            req.thread_id, req.last_index
-        )
+        result = await get_conversations_from_table(req.thread_id, req.created_at)
+
+        # Return format that matches frontend expectations
+        return {"messages": result["messages"], "has_more": result["has_more"]}
     except DatabaseError as e:
         traceback.print_exc()
         raise HTTPException(
@@ -184,18 +219,6 @@ async def get_conversations(req: ConversationId) -> ResponseConversation:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-    if not conversations:
-        return ResponseConversation(
-            success=False,
-            conversations=[],
-            message="No conversation found for this thread_id.",
-        )
-
-    return ResponseConversation(
-        success=True,
-        conversations=conversations,
-        message="Successfully got all the conversation.",
-    )
 
 
 @router.post("/delete-conversation")
@@ -216,12 +239,14 @@ async def delete_conversation_history(req: ThreadId) -> Response:
 # ----------------------------
 
 
-async def message_generator(initial_message: str, thread_id: str, parent_id: int):
+async def message_generator(initial_message, thread_id: str, parent_id: int):
     print("🎏🎏🎏")
     llm_message = ""
     tool_logs = []  # [(tool_name, tool_input, tool_output, tool_call_id)]
     message_to_insert = ""
-
+    image_url_id = None
+    image_description = ""
+    curr_datetime = datetime.now(timezone.utc).isoformat()
     try:
         async for message_chunk, metadata in workflow.astream(
             initial_message,
@@ -233,23 +258,59 @@ async def message_generator(initial_message: str, thread_id: str, parent_id: int
                 for tool_call in message_chunk.tool_calls:
                     tool_name = tool_call["name"]
                     tool_input = tool_call.get("args", {})
-                    tool_logs.append([tool_name, json.dumps(tool_input), None])
-                    message_to_insert += f"[TOOL CALL] {tool_name} with ```{tool_input}``` [TOOL CALL END]\n\n"
-                    yield f"[TOOL CALL] {tool_name} with ```{tool_input}``` [TOOL CALL END]\n\n".encode(
-                        "utf-8"
+                    tool_call_id = tool_call.get("id", "")
+                    tool_logs.append(
+                        [tool_name, json.dumps(tool_input), None, tool_call_id]
                     )
+
+                    # Show tool usage to user
+                    if tool_name!="brave_search":
+                        message_to_insert += f"🛠️ Using {tool_name}...\n\n"
+                        yield message_to_insert.encode("utf-8")
 
             elif message_chunk.type == "tool":
                 tool_name = message_chunk.name
                 tool_output = message_chunk.content
-                for log in tool_logs:
-                    if log[0] == tool_name and log[2] is None:
-                        log[2] = tool_output
-                        break
-                message_to_insert += f"[TOOL RESULT] {tool_name} => {tool_output[:200]}... [TOOL RESULT END]\n\n"
-                yield f"[TOOL RESULT] {tool_name} => {tool_output[:200]}... [TOOL RESULT END]\n\n".encode(
-                    "utf-8"
-                )
+
+                # Update tool logs with output
+                # for log in tool_logs:
+                #     if log[0] == tool_name and log[2] is None:
+                #         log[2] = tool_output
+                #         break
+
+                # Handle image generation results
+                if tool_name == "generate_image" and tool_output:
+                    for log in tool_logs:
+                        if log[0] == "generate_image" and log[2] is None:
+                            log[2] = tool_output
+                            image_description = json.loads(log[1]).get("prompt", "")
+                            break
+                    if tool_output.startswith("❌"):
+                        yield f"{tool_output}\n\n".encode("utf-8")
+                        image_url_id = None  # no valid image
+                    else:
+                        try:
+                            image_url_id = json.loads(tool_output)
+                        except json.JSONDecodeError:
+                            print(f"❌ Unexpected tool output: {tool_output}")
+                            image_url_id = None
+
+                        if image_url_id and isinstance(image_url_id, dict):
+                            print(
+                                f"------------🥹 Image generated: {image_url_id}, prompt: {image_description}"
+                            )
+                            # initial_message["messages"][-1]["images"].append(
+                            #     {
+                            #         "role": "assistant",
+                            #         "url_id": image_url_id.get("public_id"),
+                            #         "description": image_description,
+                            #         "created_at": curr_datetime,
+                            #     }
+                            # )
+                            yield f"{image_url_id['secure_url']}\n\n".encode("utf-8")
+                        else:
+                            print("⚠️ No valid image_url_id found after JSON decode")
+                            image_url_id = None
 
             elif message_chunk.type == "AIMessageChunk":
                 message = message_chunk.content
@@ -263,7 +324,7 @@ async def message_generator(initial_message: str, thread_id: str, parent_id: int
 
     # --- Save into DB ---
     try:
-        pool = get_pool()
+        pool = await get_pool()
         message_to_insert += llm_message
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
@@ -271,20 +332,39 @@ async def message_generator(initial_message: str, thread_id: str, parent_id: int
                     await cur.execute(
                         """
                             INSERT INTO messages (thread_id, parent_id, role, content) 
-                            VALUES (%s, %s, 'assistant', %s);
+                            VALUES (%s, %s, 'assistant', %s) returning id;
                             """,
                         (thread_id, parent_id, message_to_insert.strip()),
                     )
+                    curr_parent_id = (await cur.fetchone())[0]
+                if isinstance(image_url_id, dict) and image_url_id.get("public_id"):
+                    await cur.execute(
+                        """
+                            INSERT INTO images (
+                                thread_id ,parent_id, url_id, role, description, created_at
+                            )
+                            VALUES (%s, %s, %s, %s, %s, %s);
+                            """,
+                        (
+                            thread_id,
+                            curr_parent_id,
+                            image_url_id["public_id"],
+                            "assistant",
+                            image_description,
+                            curr_datetime,
+                        ),
+                    )
 
-                for tool_name, tool_input, tool_output in tool_logs:
-                    if tool_output:
-                        await cur.execute(
-                            """
-                                INSERT INTO tool_logs (message_id, tool_name, input, output)
-                                VALUES (%s, %s, %s, %s);
-                                """,
-                            (parent_id, tool_name, tool_input, tool_output),
-                        )
+                # for tool_name, tool_input, tool_output in tool_logs:
+                #     if tool_output:
+                #         await cur.execute(
+                #             """
+                #                 INSERT INTO tool_logs (message_id, tool_name, input, output)
+                #                 VALUES (%s, %s, %s, %s);
+                #                 """,
+                #             (parent_id, tool_name, tool_input, tool_output),
+                #         )
+
                 # await cur.execute(
                 #     """
                 #         SELECT content FROM messages WHERE id=%s;
