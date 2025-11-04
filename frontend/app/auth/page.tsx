@@ -29,7 +29,12 @@ const Auth = () => {
   return (
     <main className={styles.authmain}>
       {auth === "login" ? <Login /> : <Signup />}
-      <button type="button" onClick={handleAuth} className={styles.authchange}>
+      <button
+        type="button"
+        aria-label="Toggle SignIn/SignUp"
+        onClick={handleAuth}
+        className={styles.authchange}
+      >
         {auth === "login" ? (
           <p>
             Don't have an account, <strong>signup</strong>

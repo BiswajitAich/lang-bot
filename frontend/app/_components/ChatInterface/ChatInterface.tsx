@@ -573,6 +573,7 @@ export default function ChatInterface({ thread_id }: { thread_id: string }) {
             }}
           />
           <button
+            aria-label="Sent Message"
             type="submit"
             className={styles.sendButton}
             disabled={isTyping || !message.trim()}
@@ -714,7 +715,7 @@ const LoadMoreConversation = memo(
 
     return (
       <div>
-        <button onClick={handleLoad}>
+        <button onClick={handleLoad} aria-label="Loading Conversation">
           {!loading ? "Load previous conversations" : "Loading..."}
         </button>
       </div>

@@ -7,31 +7,42 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - langbot-net
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
+      cache_from:
+      - ghcr.io/biswajitaich/lang-bot-api:latest
     image: ghcr.io/biswajitaich/lang-bot-api:latest
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:8000"
     depends_on:
       - db
+    restart: unless-stopped
+    networks:
+      - langbot-net
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
+      cache_from:
+       - ghcr.io/biswajitaich/lang-bot:latest
     image: ghcr.io/biswajitaich/lang-bot:latest
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     ports:
       - "3000:3000"
     depends_on:
       - backend
+    restart: unless-stopped
+    networks:
+      - langbot-net
 
 volumes:
   postgres_data:
+
+networks:
+  langbot-net:

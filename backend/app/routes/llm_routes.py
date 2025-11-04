@@ -11,7 +11,6 @@ from pydantic import BaseModel
 # from app.utils.embedding import emb
 
 from app.utils.llm_models.funs import (
-    Message,
     create_thread_new,
     delete_conversation,
     get_conversations_from_table,

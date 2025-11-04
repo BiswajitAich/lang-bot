@@ -161,3 +161,16 @@
   background: #dc2626;
   box-shadow: 0 0 12px var(--error);
 }
+
+.logout {
+  background-color: var(--bg-tertiary);
+  color: var(--accent-secondary);
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.logout:hover {
+  background-color: black;
+  color: var(--accent-secondary-glow);
+  text-decoration: underline;
+}

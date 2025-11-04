@@ -188,6 +188,7 @@ const SignUpForm = () => {
       {!emailVerified && (
         <div className={styles.fieldGroup}>
           <button
+            aria-label="Send OTP"
             type="button"
             onClick={handleSendOtp}
             disabled={isOtpPending || !email || otpSend}
@@ -228,6 +229,7 @@ const SignUpForm = () => {
               className={`${styles.inputField} ${styles.otpInput}`}
             />
             <button
+              aria-label="OTP Verify"
               type="button"
               onClick={handleVerifyOtp}
               disabled={isVerifyPending || otp.length !== 6}
@@ -329,6 +331,7 @@ const SignUpForm = () => {
 
       {/* Submit Button */}
       <button
+        aria-label="Sign Up"
         type="submit"
         disabled={isPending || !emailVerified}
         className={`${styles.button} ${styles.submitButton}`}

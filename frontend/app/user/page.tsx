@@ -86,6 +86,16 @@ export default function ProfilePage() {
             </p>
           )}
         </div>
+        <button
+          aria-label="Logout"
+          onClick={async () => {
+            await fetch("api/logout");
+            router.replace("/");
+          }}
+          className={styles.logout}
+        >
+          Log out
+        </button>
       </div>
 
       <div className={styles.deleteSection}>
@@ -105,6 +115,7 @@ export default function ProfilePage() {
 
         {!otpSent ? (
           <button
+            aria-label="Send OTP"
             className={styles.sendOtpBtn}
             disabled={confirmText.toLowerCase() !== "confirm"}
             onClick={sendOtp}
@@ -121,6 +132,7 @@ export default function ProfilePage() {
               onChange={(e) => setOtp(e.target.value)}
             />
             <button
+              aria-label="Delete Account"
               className={styles.deleteBtn}
               onClick={handleDelete}
               disabled={isVerifying || otp.length === 0}

@@ -111,6 +111,7 @@ const LoginForm = () => {
       </div>
 
       <button
+        aria-label="Sign In"
         type="submit"
         disabled={isPending || state.credentialsStatus}
         className={`${styles.button} ${styles.submitButton} ${

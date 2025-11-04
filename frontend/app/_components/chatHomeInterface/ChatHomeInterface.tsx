@@ -125,14 +125,22 @@ const ChatHomeInterface = () => {
               handleInput();
             }}
           />
-          <button type="submit" className={styles.startButton}>
+          <button
+            type="submit"
+            className={styles.startButton}
+            aria-label="Submit Chat"
+          >
             Start Chat
             <span className={styles.chatIcon} />
           </button>
         </form>
       </div>
       {error ? (
-        <button onClick={() => setError(null)} className="error">
+        <button
+          aria-label="Display Error"
+          onClick={() => setError(null)}
+          className="error"
+        >
           {error}
         </button>
       ) : null}

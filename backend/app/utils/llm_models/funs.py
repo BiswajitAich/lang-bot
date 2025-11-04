@@ -49,7 +49,7 @@ async def get_conversations_from_table(
     thread_id: str, created_at: Optional[datetime] = None
 ) -> Dict[str, Any]:
     max_retries = 2
-    page_size = 4
+    page_size = 10
     limit = page_size + 1
     for retry_count in range(max_retries):
         try:

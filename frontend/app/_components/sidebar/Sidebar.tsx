@@ -24,6 +24,7 @@ const Sidebar = () => {
           setDisplaySideBar(!displaySideBar);
         }}
         className={styles.burger}
+        aria-label="Navigation Bar"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
